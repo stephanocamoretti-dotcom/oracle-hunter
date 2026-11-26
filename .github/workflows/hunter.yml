@@ -1,0 +1,49 @@
+name: Oracle Cloud Always Free Hunter
+
+on:
+  schedule:
+    # Se ejecuta automáticamente cada 30 minutos 24/7
+    - cron: '*/30 * * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente con un clic
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oci-hunter
+  cancel-in-progress: false
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: |
+          pip install oci requests cryptography
+
+      - name: Ejecutar ciclo de cacería
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          OCI_TENANCY_ID: ${{ secrets.OCI_TENANCY_ID }}
+          OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
+          OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+          OCI_COMPARTMENT_ID: ${{ secrets.OCI_COMPARTMENT_ID }}
+          OCI_AD_NAME: ${{ vars.OCI_AD_NAME || secrets.OCI_AD_NAME }}
+          OCI_IMAGE_ID: ${{ vars.OCI_IMAGE_ID || secrets.OCI_IMAGE_ID }}
+          OCI_SUBNET_ID: ${{ vars.OCI_SUBNET_ID || secrets.OCI_SUBNET_ID }}
+          OCI_INSTANCE_NAME: ${{ vars.OCI_INSTANCE_NAME || secrets.OCI_INSTANCE_NAME }}
+          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+          OCI_SECURITY_TOKEN: ${{ secrets.OCI_SECURITY_TOKEN }}
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+        run: |
+          python hunter.py
